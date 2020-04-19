@@ -37,7 +37,7 @@ void test(){
 	return 0;*/
 
 	/*Scander();
-	Sleep(10000000);*/
+	Sleep(10000000);*/ 
 }
 void ClientRun(){
 	Client cli;

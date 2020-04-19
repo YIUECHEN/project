@@ -1,14 +1,14 @@
 #pragma once
 #include"util.h"
 #include"httplib.h"
-#include<boost/filesystem.hpp>
+#include<boost/filesystem.hpp>//
 
 #define P2P_PORT 9000
 #define MAX_IPBUFFER 16
-#define DOWNLOAD_PATH "./DownLoad/"
+#define DOWNLOAD_PATH "./Download/"
 #define MAX_RANGE (100*1024*1024)
-class Host{
-public:
+
+struct Host{
 	uint32_t _ip_addr;//要配对的主机地址
 	bool _pair_ret;//用于存放配对结果，配对成功—true，配对失败—false
 };
@@ -23,7 +23,7 @@ public:
 		return true;
 	}
 
-	//主机配对线程入口函数
+	//主机配对的线程入口函数
 	void HostPair(Host *host){
 		//1.组织http协议格式的请求数据
 		//2.组织搭建一个TCP的客户端，将数据发送
@@ -31,10 +31,10 @@ public:
 		//这整个过程只用第三方库httplib实现
 		char buf[MAX_IPBUFFER] = { 0 };
 		inet_ntop(AF_INET, &host->_ip_addr, buf, MAX_IPBUFFER);
-		httplib::Client cli(buf, P2P_PORT);
-		auto rsp = cli.Get("/hostpair");
-		if (rsp&&rsp->status == 200){
-			host->_pair_ret = true;
+		httplib::Client cli(buf, P2P_PORT);//实例化客户端对象
+		auto rsp = cli.Get("/hostpair");//rsp是rsponse类型的智能指针，存储服务端返回的内容
+		if (rsp&&rsp->status == 200){  
+			host->_pair_ret = true;  //重置主机配对结果
 		}
 		return;
 	}
@@ -43,7 +43,7 @@ public:
 	bool GetOnlineHost(){
 		char ch = 'Y';//重新匹配，默认是进行匹配的，若已经匹配，Online主机不为空，就让用户自己选择
 		if (!_online_host.empty()){
-			std::cout << "是否重新查看在线主机(Y/N):";
+			std::cout << "是否重新匹配在线主机(Y/N):";
 			fflush(stdout);
 			std::cin >> ch;
 		}
@@ -56,10 +56,12 @@ public:
 			std::vector<Host> host_list;//存放所有主机IP地址
 
 			for (int i = 0; i < list.size(); i++){//得到所有的主机IP地址列表
+
 				uint32_t ip = list[i]._ip_addr;
 				uint32_t mask = list[i]._mask_addr;
 				uint32_t net = (ntohl(ip&mask));//计算网络号
 				uint32_t max_host = (~ntohl(mask));//计算最大主机号
+
 				for (int j = 1; j < (int32_t)max_host; j++){
 					uint32_t host_ip = net + j;//这个主机IP的计算应该使用主机字节序的网络号和主机号
 					Host host;
@@ -72,10 +74,12 @@ public:
 			//对host_list中的主机创建线程进行配对
 			std::cout << "正在主机匹配中，请稍后...\n";
 			std::vector<std::thread*> thr_list(host_list.size());
+
 			for (int i = 0; i < host_list.size(); i++){
-				//2.逐个对IP地址列表中的主机发送配对请求
+			//2.逐个对IP地址列表中的主机发送配对请求
 				thr_list[i] = new std::thread(&Client::HostPair, this, &host_list[i]);
 			}
+
 			//3.若配对请求得到响应，则在对应主机位在线主机，将IP添加到——online_host列表中
 			for (int i = 0; i < host_list.size(); i++){
 				thr_list[i]->join();
@@ -104,7 +108,8 @@ public:
 	//获取文件列表
 	bool GetShareList(const std::string &host_ip){
 		//向服务端发送一个文件列表获取的请求
-		//1.先发送请求2.得到响应后解析正文（文件名称）
+		//1.先发送请求
+		//2.得到响应后解析正文（文件名称）
 
 		httplib::Client cli(host_ip.c_str(), P2P_PORT);
 		auto rsp = cli.Get("/list");
@@ -120,6 +125,7 @@ public:
 		std::string filename;
 		std::cin >> filename;
 		std::cout << "开始下载文件..." << std::endl;
+		//DownloadFile(host_ip, filename);
 		RangeDownloadFile(host_ip, filename);
 		return true;
 	}
@@ -158,6 +164,7 @@ public:
 			return false;
 		}
 		std::string clen = rsp->get_header_value("Content-Length");
+		//int64_t filesize=StringUtil:;Str2Dig(clen);
 		int64_t filesize = std::stol(clen);
 		//2.根据定义的块大小对文件进行区间分块
 		if (filesize < MAX_RANGE){
@@ -174,7 +181,6 @@ public:
 		}
 		int64_t range_start = 0, range_end = 0;
 		for (int i = 0; i < range_count; i++){
-			range_start = i*MAX_RANGE;
 			range_start = i*MAX_RANGE;
 			if (i == (range_count - 1)){
 				range_end = filesize;
