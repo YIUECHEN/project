@@ -160,7 +160,7 @@ public:
 		httplib::Client cli(host_ip.c_str(), P2P_PORT);
 		auto rsp = cli.Head(req_path.c_str());
 		if (rsp == NULL || rsp->status != 200){
-			std::cout << "获取文件大小信息失败";
+			std::cout << "获取文件大小信息失败\n";
 			return false;
 		}
 		std::string clen = rsp->get_header_value("Content-Length");
@@ -172,23 +172,25 @@ public:
 			return DownloadFile(host_ip, filename);
 		}
 		std::cout << "文件较大，分块下载...\n";
+		std::cout << filesize << std::endl;
+
 		int range_count = 0;
 		if ((filesize%MAX_RANGE) == 0) {
 			range_count = filesize / MAX_RANGE;
 		}
 		else {
-			range_count = filesize / MAX_RANGE + 1;
-		}
+			range_count = (filesize / MAX_RANGE) + 1;
+		}    
 		int64_t range_start = 0, range_end = 0;
 		for (int i = 0; i < range_count; i++){
 			range_start = i*MAX_RANGE;
 			if (i == (range_count - 1)){
-				range_end = filesize;
+				range_end = filesize-1;
 			}
 			else{
-				range_end = (i + 1)*MAX_RANGE - 1;
+				range_end = (i + 1)*MAX_RANGE-1;
 			}
-			std::cout << "客户端请求分块:" << range_start << "-" << range_start << std::endl;
+			std::cout << "客户端请求分块:" << range_start << "-" << range_end << std::endl;
 
 			//3.循环请求分块数据，一块请求成功了在下载下一块
 			std::stringstream tmp;
@@ -198,12 +200,17 @@ public:
 			header.insert(std::make_pair("Range", tmp.str()));
 			auto rsp = cli.Get(req_path.c_str(), header);
 			if (rsp == NULL || rsp->status != 206){
-				std::cout << "区间文件下载失败！\n";
+				std::cout <<  "区间文件下载失败！\n\n";
 				return false;
 			}
-			FileUtil::Write(filename, rsp->body, range_start);
+			std::string real_path = DOWNLOAD_PATH + filename;
+			if (!boost::filesystem::exists(DOWNLOAD_PATH))
+			{
+				boost::filesystem::create_directory(DOWNLOAD_PATH);
+			}
+			FileUtil::Write(real_path, rsp->body, range_start);
 		}
-		std::cout << "文件下载成功！\n";
+		std::cout << "文件下载成功！\n\n";
 		return true;
 	}
 

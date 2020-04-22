@@ -55,14 +55,17 @@ private:
 			//判断是否需要分块传输，就是这次请求中是否有Range同步判断
 			if (req.has_header("Range")){
 				std::string range_str = req.get_header_value("Range");
-				httplib::Ranges ranges;
-				httplib::detail::parse_range_header(range_str, ranges);//解析客户端的Range数据
-				int64_t range_start = ranges[0].first;
-				int64_t range_end = ranges[0].second;
-				int range_len = range_end - range_start + 1;
-				std::cout << "range" << range_start << "-" << range_end << std::endl;
+				int64_t range_start;
+				int64_t range_end;
+				FileUtil::GetRange(range_str, &range_start, &range_end);
+
+				int64_t range_len = range_end - range_start + 1;
+
+				std::cout << "服务端收到Range:" << range_start << "-" << range_end << std::endl;
 				FileUtil::ReadRange(realpath, &rsp.body, range_len, range_start);
 				rsp.status = 206;
+				std::cout << rsp.body.c_str() << std::endl;
+				std::cout << "服务端响应区间数据完毕\n\n";
 			}
 			else{
 				//没有Range头部就是完整文件下载
@@ -73,6 +76,13 @@ private:
 				rsp.status = 200;
 				return;
 			}
+		}
+		else
+		{
+			//这个是针对HEAD请求的客户端只要头部不要正文
+			uint64_t filesize = FileUtil::GetFileSize(realpath);
+			rsp.set_header("Content-Length", std::to_string(filesize));//设置响应header头部信息接口
+			rsp.status = 200;
 		}
 	}
 	

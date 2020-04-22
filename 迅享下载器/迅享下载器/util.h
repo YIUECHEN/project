@@ -38,9 +38,9 @@ class StringUtil{
 //若后期文件操作有其他修改，则只需要修改文件操作工具即可，而不需要对原文进行改变
 class FileUtil{
 public:
-	/*static int64_t GetFileSize(const std::string &name){
+	static int64_t GetFileSize(const std::string &name){
 	return boost::filesystem::file_size(name);
-	}*/
+	}
 	static bool Write(const std::string &name, const std::string &body, int64_t offset = 0){
 		//std::ofstream ofs(name，std::ios::binary);
 		//if (ofs.is_open() == false){
@@ -112,18 +112,28 @@ public:
 		FILE *fp = NULL;
 		fopen_s(&fp, name.c_str(), "rb+");
 		if (fp == NULL){
-			std::cout << "打开文件失败！\n";
+			std::cerr << "打开文件失败！\n";
 			fclose(fp);
 			return false;
 		}
 		fseek(fp, offset, SEEK_SET);
 		auto ret = fread(&(*body)[0], 1, len, fp);
 		if (ret != len){
-			std::cout << "从文件读取数据失败！\n";
+			std::cerr  << "从文件读取数据失败！\n";
 			fclose(fp);
 			return false;
 		}
 		fclose(fp);
+		return true;
+	}
+	static bool GetRange(const std::string& range_str, int64_t* start, int64_t* end)
+	{
+		size_t pos1 = range_str.find('-');
+		size_t pos2 = range_str.find('=');
+		*start = std::atol(range_str.substr(pos2 + 1, pos1 - pos2 - 1).c_str());
+		//std::cout << "range_str.substr(pos1 + 1, pos1 - pos2 - 1):" << range_str.substr(pos1 + 1, pos1 - pos2 - 1) << std::endl;
+		*end = std::atol(range_str.substr(pos1 + 1).c_str());
+		//std::cout << "range_str.substr(pos1 + 1):" << range_str.substr(pos1 + 1) << std::endl;
 		return true;
 	}
 };
