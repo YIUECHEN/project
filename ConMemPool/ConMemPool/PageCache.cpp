@@ -68,6 +68,11 @@ void PageCache::ReleaseSpanToPageCache(Span* span){
 			break;
 		}
 
+		if (span->pagesize + prevSpan->pagesize >= MAX_PAGES)
+		{
+			break;
+		}
+
 		//ºÏ²¢
 		span->_pageid = prevSpan->_pageid;
 		span->pagesize += prevSpan->pagesize;

@@ -17,7 +17,7 @@ Span* CentralCache::GetOneSpan(size_t size){
 
 	//page cache获取一个span
 	size_t numpage = SizeClass::NumMovePage(size);//求出需要申请的页数
-	Span* span = pageCacheInst.NewSpan(numpage); 
+	Span* span = PageCache::GetPageCacheInstance().NewSpan(numpage);
 
 	//把申请来的span切成对应大小挂到span的freelist中
 	char* start = (char*)(span->_pageid << 12);
@@ -58,7 +58,7 @@ void CentralCache::ReleaseListToSpans(void* start, size_t size){
 	while (start){
 		void* next = NextObj(start);
 		PAGE_ID id = (PAGE_ID)start >> PAGE_SHIFT;
-		Span* span = pageCacheInst.GetIdToSpan(id);
+		Span* span = PageCache::GetPageCacheInstance().GetIdToSpan(id);
 		span->_freeList.Push(start);
 		span->_usecount--;
 
@@ -68,7 +68,7 @@ void CentralCache::ReleaseListToSpans(void* start, size_t size){
 			_spanLists->Erase(span);
 			span->_freeList.Clear();
 
-			pageCacheInst.ReleaseSpanToPageCache(span);
+			PageCache::GetPageCacheInstance().ReleaseSpanToPageCache(span);
 		}
 		start = next;
 	}

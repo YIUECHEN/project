@@ -15,7 +15,7 @@ void* ConcurrentMalloc(size_t size){
 	else if (size<=(MAX_PAGES-1)<<PAGE_SHIFT){
 		size_t aligent_size = SizeClass::_RoundUp(size, 1<<PAGE_SHIFT);
 		size_t numpage = aligent_size >> PAGE_SHIFT;
-		Span* span = pageCacheInst.NewSpan(numpage);
+		Span* span = PageCache::GetPageCacheInstance().NewSpan(numpage);
 		span->objsize = aligent_size;
 		void* ptr = (void*)(span->_pageid << PAGE_SHIFT);
 		return ptr;
@@ -29,7 +29,7 @@ void* ConcurrentMalloc(size_t size){
 
 void ConcurrentFree(void* ptr){
 	size_t pageid = (PAGE_ID)ptr >> PAGE_SHIFT;
-	Span* span = pageCacheInst.GetIdToSpan(pageid);
+	Span* span = PageCache::GetPageCacheInstance().GetIdToSpan(pageid);
 
 	if (span == nullptr){
 		SystemFree(ptr);
@@ -41,6 +41,6 @@ void ConcurrentFree(void* ptr){
 		pThreadCache->Deallocte(ptr, size);
 	}
 	else if(size<=((MAX_PAGES-1)<<PAGE_SHIFT)){
-		pageCacheInst.ReleaseSpanToPageCache(span);
+		PageCache::GetPageCacheInstance().ReleaseSpanToPageCache(span);
 	}
 }

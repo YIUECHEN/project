@@ -65,9 +65,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BenchMarkTest.cpp" />
     <ClCompile Include="CentralCache.cpp" />
     <ClCompile Include="PageCache.cpp" />
-    <ClCompile Include="test.cpp" />
+    <ClCompile Include="Unittest.cpp" />
     <ClCompile Include="ThreadCache.cpp" />
   </ItemGroup>
   <ItemGroup>
