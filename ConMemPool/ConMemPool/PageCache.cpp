@@ -1,5 +1,8 @@
 #include"PageCache.h"
 
+
+PageCache PageCache::inst;
+
 Span* PageCache::NewSpan(size_t numpage){
 	//可以直接返回
 	if (!_spanLists[numpage].Empty()){

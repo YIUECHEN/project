@@ -30,7 +30,7 @@ void ThreadCache::ListTooLong(FreeList& freeList,size_t num,size_t size){
 	void* start = nullptr, *end = nullptr;
 	freeList.PopRange(start, end, num);
 	NextObj(end) = nullptr;
-	centralCacheInst.ReleaseListToSpans(start, size);
+	CentralCache::GetInstance()->ReleaseListToSpans(start, size);
 }
 
 //¶ÀÁ¢²âÊÔthread cache
@@ -57,7 +57,7 @@ void ThreadCache::ListTooLong(FreeList& freeList,size_t num,size_t size){
 void* ThreadCache::FetchFromCentralCache(size_t size){
 	size_t num = SizeClass::NumMoveSize(size);//¶ÔÆë£¨ÉêÇë5×Ö½Ú£¬¸ø8×Ö½Ú£©
 	void* start = nullptr, *end = nullptr;
-	size_t actualNum=centralCacheInst.FetchRangeObj(start, end, num, size);
+	size_t actualNum=CentralCache::GetInstance()->FetchRangeObj(start, end, num, size);
 
 	if (actualNum == 1){
 		return start;

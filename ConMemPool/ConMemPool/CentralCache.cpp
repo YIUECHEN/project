@@ -1,6 +1,8 @@
 #include"CentralCache.h"
 #include"PageCache.h"
 
+
+CentralCache CentralCache::centralCacheInst;
 //从page cache获取一个span
 Span* CentralCache::GetOneSpan(size_t size){
 	size_t index = SizeClass::ListIndex(size);
